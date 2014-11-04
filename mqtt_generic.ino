@@ -1,16 +1,19 @@
 /**************************************************** 
- * mqtt_temp
+ * mqtt_generic
+ * Andrew Sands - r0kdu5t@theatrix.org.nz
  *
- * Jon Archer
+ * Forked from mqtt_temperature by Jon Archer
  * 
- * Sketch to take the temperature from an attached
- * Dallas sensor and post it over MQTT, this also
- * generates a mac address for ethernet use from 
- * the Dallas sensors unique ID.
- * This is essentially a starting point for all HA
- * sketches as this will feature in every room.
+ * Sketch to take the temperature from an attached 
+ * Dallas sensor and post it over MQTT. 
+ * Can be configured to use the DS18B20 to generate
+ * a MAC address for ethernet use from 
+ * the Dallas sensors unique ID or can retrieve the
+ * MAC address from a Microchip 24AA125E48 I2C ROM.
+ *
+ * This is a starting point sketch.
+ * 
  ****************************************************/
-
 
 #include <SPI.h>
 #include <Ethernet.h>
@@ -20,12 +23,13 @@
 #include "config.h"
 
 byte mac[]= { 0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02 };
-OneWire ds(2);
+OneWire node_id(ONE_WIRE_BUS);
+DallasTemperature nodeaddr(&node_id);
 
 
 EthernetClient ethClient;  // Ethernet object
 PubSubClient client( MQTT_SERVER, 1883, callbackMQTT, ethClient); // MQTT object
-DallasTemperature dallas(&ds);
+//DallasTemperature dallas(&ds);
 
 void ethernetFromDS(){
     byte i;
@@ -34,9 +38,9 @@ void ethernetFromDS(){
 #ifdef DEBUG_PRINT
     Serial.print ("Searching for DS18B20...");
 #endif
-    ds.reset_search();
+    node_id.reset_search();
 
-  if ( !ds.search(dsAddress) )
+  if ( !node_id.search(dsAddress) )
   {
 #ifdef DEBUG_PRINT
     Serial.println("none found. Using specified MAC Address.");
@@ -96,12 +100,12 @@ void checkMQTT() {
 void getTemp()
 {
 
-   dallas.requestTemperatures(); // Send the command to get temperatures
+   nodeaddr.requestTemperatures(); // Send the command to get temperatures
     
       char* temp;
       unsigned long tempTimeout = 0;
       char message_buffer[100];
-      temp = dtostrf(dallas.getTempCByIndex(0), 5, 2, message_buffer);
+      temp = dtostrf(nodeaddr.getTempCByIndex(0), 5, 2, message_buffer);
       
       // push each stright out via mqtt
        if ( (millis() - tempTimeout) > 10000 ) {
@@ -127,7 +131,7 @@ void setup()
  ethernetFromDS();
 
 //Start the dallas sensor
- dallas.begin();
+ nodeaddr.begin();
 
 // Start MQTT
   checkMQTT();
@@ -146,3 +150,22 @@ void loop()
 // are we still connected to MQTT
   checkMQTT();
 }
+
+/*
+ *
+byte readRegister(byte r)
+{
+  unsigned char v;
+  Wire.beginTransmission(I2C_ADDRESS);
+  Wire.write(r);  // Register to read
+  Wire.endTransmission();
+
+  Wire.requestFrom(I2C_ADDRESS, 1); // Read a byte
+  while(!Wire.available())
+  {
+    // Wait
+  }
+  v = Wire.read();
+  return v;
+}
+ */

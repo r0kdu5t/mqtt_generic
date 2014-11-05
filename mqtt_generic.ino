@@ -64,13 +64,19 @@ void ethernetFromDS(){
   }
   Serial.println();
 #endif
-
+/*
   if (Ethernet.begin(mac) == 0) {
 #ifdef DEBUG_PRINT
     Serial.println("Failed to configure Ethernet using DHCP");
 #endif
     for(;;)
       ;
+  } */
+//wait for IP address
+  while (Ethernet.begin(mac) != 1) {
+    Serial.println("Error getting IP address via DHCP, trying again...");
+    // blink an LED to identify error!
+    delay(5000);
   }  
 
 #ifdef DEBUG_PRINT
@@ -128,16 +134,16 @@ void setup()
 {
     Serial.begin(9600);
 //Start Ethernet using mac formed from DS
- ethernetFromDS();
+ethernetFromDS();
 
 //Start the dallas sensor
- nodeaddr.begin();
+nodeaddr.begin();
 
 // Start MQTT
-  checkMQTT();
+checkMQTT();
 
 // short delay to make sure we're happy
-  delay(100);
+delay(100);
 }
 
 

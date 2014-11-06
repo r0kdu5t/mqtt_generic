@@ -21,8 +21,13 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include "config.h"
+#ifdef MAC_MCP
+#include <Wire.h>
+#define I2C_ADDRESS 0x50
+#endif
 
 byte mac[]= { 0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02 };
+
 OneWire node_id(ONE_WIRE_BUS);
 DallasTemperature nodeaddr(&node_id);
 
@@ -130,12 +135,25 @@ void getTemp()
 
 
 
-void setup()
-{
-    Serial.begin(9600);
-//Start Ethernet using mac formed from DS
-ethernetFromDS();
+void setup() {
+  Serial.begin(9600);
 
+  //Start Ethernet using mac formed from DS
+  #ifdef MAC_DS
+    #ifdef DEBUG_PRINT
+      Serial.println("Starting ethernetFromDS...");
+    #endif
+    ethernetFromDS();
+  #endif
+/*
+  //Start Ethernet using mac formed from DS
+  #ifdef MAC_MCP
+    #ifdef DEBUG_PRINT
+      Serial.println("Starting ethernetMCP...");
+    #endif
+    ethernetFromDS();
+  #endif
+ */ 
 //Start the dallas sensor
 nodeaddr.begin();
 
@@ -158,7 +176,7 @@ void loop()
 }
 
 /*
- *
+
 byte readRegister(byte r)
 {
   unsigned char v;
@@ -174,4 +192,40 @@ byte readRegister(byte r)
   v = Wire.read();
   return v;
 }
+
+void ethernetMCP() {
+  //
+  // * Retrieve the MAC address from a Microchip 24AA125E48 I2C ROM, and report it
+  // * to the serial console at 57600bps. The I2C address of the ROM is set to 0x50,
+  // * which assumes both the address pins are tied to 0V.
+  //
+  char tmpBuf[17];
+  // Join i2c bus (I2C address is optional for the master)
+  Wire.begin(); // May need to move to setup
+  
+  // Could relpace with a simple delay?
+  for(int i = 0; i < 30; i++)
+  {
+    Serial.println(" ");
+  }
+  #ifdef DEBUG_PRINT
+    Serial.println("Starting test for MAC address ROM");
+    Serial.print("Getting MAC: ");
+  #endif
+  
+  mac[0] = readRegister(0xFA);
+  mac[1] = readRegister(0xFB);
+  mac[2] = readRegister(0xFC);
+  mac[3] = readRegister(0xFD);
+  mac[4] = readRegister(0xFE);
+  mac[5] = readRegister(0xFF);
+  
+  #ifdef DEBUG_PRINT
+    sprintf(tmpBuf, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    Serial.println(tmpBuf);
+    Serial.println(" TEST OK");
+  #endif
+
+}
+
  */

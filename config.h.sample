@@ -1,6 +1,21 @@
 
 //#define DEBUG_PRINT
-#define ONE_WIRE_BUS 2  // DS18B20 on pin D2 used for MAC address
+
+#define MAC_DS			// Use DS for MAC
+//#define MAC_MCP		// Use MCP 24AA025E48 ROM for MAC
+#ifdef MAC_DS
+#ifdef MAC_MCP
+#error Can not define both MAC_DS and MAC_MCP
+#endif
+
+//#define IP_DHCP
+//#define IP_STATIC
+//#ifdef IP_DHCP
+//#ifdef IP_STATIC
+//#error Can not define both IP_DHCP and IP_STATIC
+//#endif
+
+#define ONE_WIRE_BUS 2  // DS18B20 on pin D2
 
 #define MQTT_SERVER "192.168.1.1"
 #define TEMP_TOPIC "house/room1/temp"

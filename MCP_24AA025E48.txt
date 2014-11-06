@@ -4,8 +4,8 @@
  * which assumes both the address pins are tied to 0V.
  */
 
-#define I2C_ADDRESS 0x50
 #include <Wire.h>
+#define I2C_ADDRESS 0x50
 
 static uint8_t mac[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }; 
 

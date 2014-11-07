@@ -36,24 +36,25 @@ EthernetClient ethClient;  // Ethernet object
 PubSubClient client( MQTT_SERVER, 1883, callbackMQTT, ethClient); // MQTT object
 //DallasTemperature dallas(&ds);
 
+#ifdef MAC_DS
 void ethernetFromDS(){
     byte i;
     byte dsAddress[8];
     delay( 500 );
 #ifdef DEBUG_PRINT
     Serial.print ("Searching for DS18B20...");
-#endif
+#endif // DEBUG_PRINT
     node_id.reset_search();
 
   if ( !node_id.search(dsAddress) )
   {
 #ifdef DEBUG_PRINT
     Serial.println("none found. Using specified MAC Address.");
-#endif
+#endif // DEBUG_PRINT
   } else {
 #ifdef DEBUG_PRINT
     Serial.print( "Success! \nSetting MAC address...." );
-#endif
+#endif // DEBUG_PRINT
   mac[1] = dsAddress[3];
   mac[2] = dsAddress[4];
   mac[3] = dsAddress[5];
@@ -68,7 +69,7 @@ void ethernetFromDS(){
     Serial.print( mac[i], HEX );
   }
   Serial.println();
-#endif
+#endif // DEBUG_PRINT
 /*
   if (Ethernet.begin(mac) == 0) {
 #ifdef DEBUG_PRINT
@@ -93,8 +94,9 @@ void ethernetFromDS(){
     }
      */
     Serial.println( Ethernet.localIP() );  
-#endif  
+#endif // DEBUG_PRINT
 }
+#endif // MAC_DS
 
 //Start MQTT goodness
 void callbackMQTT(char* topic, byte* payload, unsigned int length) {
@@ -105,7 +107,7 @@ void checkMQTT() {
     if (client.connect(CLIENT_ID)) {
 #ifdef DEBUG_PRINT
       Serial.println(F("MQTT Reconecting"));
-#endif
+#endif // DEBUG_PRINT
     } 
   } 
 } // end checkMQTT()
@@ -131,7 +133,7 @@ void getTemp()
 #ifdef DEBUG_PRINT
       Serial.println(temp);
 
-#endif
+#endif // DEBUG_PRINT
         }
   
 } // end getTemp()
@@ -145,27 +147,26 @@ void setup() {
   #ifdef MAC_DS
     #ifdef DEBUG_PRINT
       Serial.println("Starting ethernetFromDS...");
-    #endif
+    #endif // DEBUG_PRINT
     ethernetFromDS();
   #endif
-/*
+
   //Start Ethernet using mac formed from DS
   #ifdef MAC_MCP
     #ifdef DEBUG_PRINT
-      Serial.println("Starting ethernetMCP...");
-    #endif
-    ethernetFromDS();
+      Serial.println("Starting ethernetFromMCP...");
+    #endif // DEBUG_PRINT
+    ethernetFromMCP();
   #endif
- */ 
+
 //Start the dallas sensor
 nodeaddr.begin();
 
 // Start MQTT
 checkMQTT();
-
 // short delay to make sure we're happy
 delay(100);
-}
+} // end setup()
 
 
 void loop()
@@ -176,10 +177,9 @@ void loop()
   
 // are we still connected to MQTT
   checkMQTT();
-}
+} // end loop()
 
-/*
-
+#ifdef MAC_MCP
 byte readRegister(byte r)
 {
   unsigned char v;
@@ -195,12 +195,14 @@ byte readRegister(byte r)
   v = Wire.read();
   return v;
 }
+#endif // MAC_MCP
 
-void ethernetMCP() {
+#ifdef MAC_MCP
+void ethernetFromMCP() {
   //
-  // * Retrieve the MAC address from a Microchip 24AA125E48 I2C ROM, and report it
-  // * to the serial console at 57600bps. The I2C address of the ROM is set to 0x50,
-  // * which assumes both the address pins are tied to 0V.
+  // * Retrieve the MAC address from a Microchip 24AA125E48 I2C ROM.
+  // * The I2C address of the ROM is set to 0x50, which assumes 
+  // * both the address pins are tied to 0V.
   //
   char tmpBuf[17];
   // Join i2c bus (I2C address is optional for the master)
@@ -214,7 +216,7 @@ void ethernetMCP() {
   #ifdef DEBUG_PRINT
     Serial.println("Starting test for MAC address ROM");
     Serial.print("Getting MAC: ");
-  #endif
+  #endif // DEBUG_PRINT
   
   mac[0] = readRegister(0xFA);
   mac[1] = readRegister(0xFB);
@@ -227,8 +229,9 @@ void ethernetMCP() {
     sprintf(tmpBuf, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     Serial.println(tmpBuf);
     Serial.println(" TEST OK");
-  #endif
+  #endif // DEBUG_PRINT
 
 }
+#endif // MAC_MCP
 
- */
+// #ifdef <name_ref> #endif // <name_ref>

@@ -27,6 +27,7 @@
 #endif
 
 byte mac[]= { 0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02 };
+char macstr[18];
 
 OneWire node_id(ONE_WIRE_BUS);
 DallasTemperature nodeaddr(&node_id);
@@ -61,14 +62,19 @@ void ethernetFromDS(){
   mac[4] = dsAddress[6];
   mac[5] = dsAddress[7];
   }
-#ifdef DEBUG_PRINT  
-  Serial.print( "Ethernet MAC =" );
-  for( i = 0; i < 6; i++ )
-  {
-    Serial.write( ' ' );
-    Serial.print( mac[i], HEX );
-  }
+  // Generate macstr for node naming convention?
+  snprintf(macstr, 18, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);  
+#ifdef DEBUG_PRINT
+  //Serial.print( "Ethernet MAC =" );
+  //for( i = 0; i < 6; i++ )
+  //{
+  //  Serial.write( ' ' );
+  //  Serial.print( mac[i], HEX );
+  //}
   Serial.println();
+  Serial.print("Ethernet MAC = (");
+  Serial.print(macstr);
+  Serial.println(")...");  
 #endif // DEBUG_PRINT
 /*
   if (Ethernet.begin(mac) == 0) {

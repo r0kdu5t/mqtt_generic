@@ -106,8 +106,8 @@ boolean connect_mqtt() {
     if (client.connect(macstr)) {
         Serial.println("connected");
         char topic[40];
-        snprintf(topic, 40, "raw/%s/state", macstr);
-        client.publish(topic, "StartUp");
+        snprintf(topic, 40, "raw/state/%s", macstr);
+        client.publish(topic, "OnLine");
         return true;
         }
     Serial.println("connection failed.");
@@ -116,24 +116,34 @@ boolean connect_mqtt() {
 
 void getTemp()
 {
-
+  //char* temp;
+  unsigned long tempTimeout = 0;
+  //char message_buffer[100];
+  char topic[50];
+  memset(topic, '\0', 50);
+  
+  
   nodeaddr.requestTemperatures(); // Send the command to get temperatures
 
-    char* temp;
-  unsigned long tempTimeout = 0;
-  char message_buffer[100];
-  temp = dtostrf(nodeaddr.getTempCByIndex(0), 5, 2, message_buffer);
+  //temp = dtostrf(nodeaddr.getTempCByIndex(0), 5, 2, message_buffer);
+  float celsius = nodeaddr.getTempCByIndex(0);
+  // Index 0 means first device on the 1-Wire bus.
 
   // push each stright out via mqtt
   if ( (millis() - tempTimeout) > 10000 ) {
     // if (millis() > (time + 150000)) {
     tempTimeout = millis();
-    client.publish(TEMP_TOPIC, temp);
+    //client.publish(TEMP_TOPIC, temp);
+    char charMsg[10];
+    memset(charMsg, '\0', 10);
+    dtostrf(celsius, 4, 2, charMsg);
+    snprintf(topic, 50, "raw/%s/temperature", macstr);
+    client.publish(topic, charMsg);
     delay( 1000 );
 
 #ifdef DEBUG_PRINT
-    Serial.println(temp);
-
+    //Serial.println(temp);
+    Serial.println(charMsg);
 #endif // DEBUG_PRINT
   }
 

@@ -179,6 +179,10 @@ void loop()
 
   // are we still connected to MQTT
   //checkMQTT();
+   if (!client.connected() && !connect_mqtt()) {
+       return;
+   }
+   client.loop();  
 
    int dhcp_status = Ethernet.maintain();
    /*

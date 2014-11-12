@@ -1,0 +1,2 @@
+Mon 10 Nov 2014 11:15:36 => Binary sketch size: 25,388 bytes (of a 30,720 byte maximum)
+Mon 10 Nov 2014 11:29:05 => Binary sketch size: 25,538 bytes (of a 30,720 byte maximum)

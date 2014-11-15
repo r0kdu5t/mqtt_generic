@@ -14,12 +14,18 @@
  * This is a starting point sketch.
  * 
  ****************************************************/
-
+//#define MAC_DS  	// Use DS for MAC
+//#define DS_TEMP       // Use DS for temperature
 #include <SPI.h>
 #include <Ethernet.h>
 #include <PubSubClient.h>
+
+#ifdef MAC_DS // TODO - add OR function with DS_TEMP!
 #include <OneWire.h>
+#endif // MAC_DS
+#ifdef DS_TEMP
 #include <DallasTemperature.h>
+#endif // DS_TEMP
 #include "config.h"
 #ifdef MAC_MCP
 #include <Wire.h>
@@ -30,15 +36,53 @@ byte mac[]= {
   0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02 };
 char macstr[18];
 
+#ifdef MAC_DS || def DS_TEMP
 OneWire node_id(ONE_WIRE_BUS);
+#endif // MAC_DS || def DS_TEMP
+#ifdef DS_TEMP 
 DallasTemperature nodeaddr(&node_id);
-
+#endif // DS_TEMP
 
 EthernetClient ethClient;  // Ethernet object
 PubSubClient client( MQTT_SERVER, 1883, callbackMQTT, ethClient); // MQTT object
 
+#ifdef BEACON
+long previousMillis = 0;
+#ifdef DEBUG_PRINT
+#define INTERVAL 10000
+#else#
+#define INTERVAL 60000
+#endif
+#endif // BEACON
+
+#ifdef BEACON
+/**
+ * activateBeacon
+ */
+void activateBeacon() {
+  // Beacon code in this routine.
+  char topic[40];
+  memset(topic, '\0', 40);
+  unsigned long currentMillis = millis();
+  
+  if (currentMillis - previousMillis > long(INTERVAL)) {
+    // save the last time
+    previousMillis = currentMillis;
+    
+    snprintf(topic, 40, "raw/%s/beacon", macstr);
+    client.publish(topic, BEACON_TEXT);
+    
+#ifdef DEBUG_PRINT
+    Serial.print(topic);
+    Serial.print(" ");
+    Serial.println(BEACON_TEXT);
+#endif // DEBUG_PRINT
+  } 
+}
+#endif // activateBeacon()
+
 #ifdef MAC_DS
-void ethernetFromDS(){
+void ethernetFromDS() {
   byte i;
   byte dsAddress[8];
   delay( 500 );
@@ -88,17 +132,7 @@ void ethernetFromDS(){
 //Start MQTT goodness
 void callbackMQTT(char* topic, byte* payload, unsigned int length) {
 }
-/*
-void checkMQTT() {
-  if(!client.connected()) {
-    if (client.connect(CLIENT_ID)) {
-#ifdef DEBUG_PRINT
-      Serial.println(F("MQTT Reconnecting"));
-#endif // DEBUG_PRINT
-    } 
-  } 
-} // end checkMQTT()
- */
+
 boolean connect_mqtt() {
     // Use macstr for node naming convention?
     // Format == "%02x:%02x:%02x:%02x:%02x:%02x"
@@ -114,6 +148,7 @@ boolean connect_mqtt() {
     return false;
 } // end connect_mqtt()
 
+#ifdef DS_TEMP
 void getTemp()
 {
   //char* temp;
@@ -148,6 +183,7 @@ void getTemp()
   }
 
 } // end getTemp()
+#endif // DS_TEMP 
 
 
 
@@ -170,25 +206,32 @@ void setup() {
   ethernetFromMCP();
 #endif
 
+#ifdef DS_TEMP
   //Start the dallas sensor
   nodeaddr.begin();
+#endif // DS_TEMP
 
-  // Start MQTT
-  //checkMQTT();
-  
+#ifdef DEBUG_PRINT
+  Serial.print("DEBUG mode. Beacon INTERVAL set to : ");
+  Serial.println(INTERVAL);
+#endif // DEBUG_PRINT  
   // short delay to make sure we're happy
   delay(100);
 } // end setup()
 
-
 void loop()
 {
-  client.loop();
+#ifdef BEACON
+  //Call beacon 
+  activateBeacon();
+#endif // BEACON  
+
+#ifdef DS_TEMP
   //Get the temperatures 
   getTemp();
+#endif // DS_TEMP
 
   // are we still connected to MQTT
-  //checkMQTT();
    if (!client.connected() && !connect_mqtt()) {
        return;
    }
@@ -236,15 +279,15 @@ void ethernetFromMCP() {
   // * The I2C address of the ROM is set to 0x50, which assumes 
   // * both the address pins are tied to 0V.
   //
-  char tmpBuf[17];
   // Join i2c bus (I2C address is optional for the master)
   Wire.begin(); // May need to move to setup
 
-  // Could relpace with a simple delay?
+  // TODO: Relpace with simple delay?
   for(int i = 0; i < 30; i++)
   {
-    Serial.println(" ");
+    Serial.print(" ");
   }
+  Serial.println(" ");
 #ifdef DEBUG_PRINT
   Serial.println("Starting test for MAC address ROM");
   Serial.print("Getting MAC: ");
@@ -258,11 +301,22 @@ void ethernetFromMCP() {
   mac[5] = readRegister(0xFF);
 
 #ifdef DEBUG_PRINT
-  sprintf(tmpBuf, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-  Serial.println(tmpBuf);
-  Serial.println(" TEST OK");
+  // Generate macstr for node naming convention?
+  snprintf(macstr, 18, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  Serial.println(macstr);
+  //Serial.println(" TEST OK");
 #endif // DEBUG_PRINT
+  //wait for IP address
+  while (Ethernet.begin(mac) != 1) {
+    Serial.println("Error getting IP address via DHCP, trying again...");
+    // TODO: turn on or blink an LED to identify error!
+    delay(5000);
+  }  
 
+#ifdef DEBUG_PRINT
+  Serial.print("IP address: ");
+  Serial.println( Ethernet.localIP() );  
+#endif // DEBUG_PRINT
 }
 #endif // MAC_MCP
 

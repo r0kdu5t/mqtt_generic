@@ -63,7 +63,6 @@ long previousMillis = 0;
  * activateBeacon
  */
 void activateBeacon() {
-  // Beacon code in this routine.
   char topic[40];
   memset(topic, '\0', 40);
   unsigned long currentMillis = millis();
@@ -384,7 +383,3 @@ void ethernetFromMCP() {
 }
 #endif // MAC_MCP
 
-// #ifdef <name_ref> #endif // <name_ref>
-// dtostrf(floatVar, minStringWidthIncDecimalPoint, numVarsAfterDecimal, charBuf);
-// http://forum.arduino.cc/index.php?topic=103935.0
-// http://www.arduino-hacks.com/float-to-string-float-to-character-array-arduino/

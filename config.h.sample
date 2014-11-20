@@ -1,8 +1,8 @@
 
 //#define DEBUG_PRINT
 
-//#define MAC_DS			// Use DS for MAC
-#define MAC_MCP		// Use MCP 24AA025E48 ROM for MAC
+//#define MAC_DS // Use DS for MAC
+#define MAC_MCP // Use MCP 24AA025E48 ROM for MAC
 #ifdef MAC_DS
 #ifdef MAC_MCP
 #error Can not define both MAC_DS and MAC_MCP
@@ -15,14 +15,18 @@
 //#error Can not define both IP_DHCP and IP_STATIC
 //#endif
 
-//#define DS_TEMP         // Use DS for temperature
-#define ONE_WIRE_BUS 2  // DS18B20 on pin D2
+//#define DS_TEMP // Use DS for temperature
+#define ONE_WIRE_BUS 2 // DS18B20 on pin D2
 
 #define MQTT_SERVER "192.168.1.1"
-//#define TEMP_TOPIC "house/room1/temp"
-//#define  CLIENT_ID "room1"
 
 #define BEACON // MQTT beacon
 #ifdef BEACON
 #define BEACON_TEXT "I'm Alive." // Beacon text
 #endif // BEACON
+
+#define HUMID
+#ifdef HUMID
+#define DHTPIN 2 // what pin we're connected to 
+#define DHTTYPE DHT22 // DHT 22  (AM2302)
+#endif //HUMID

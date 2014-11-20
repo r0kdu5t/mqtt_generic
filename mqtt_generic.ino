@@ -1,15 +1,16 @@
-/**************************************************** 
+/*************************************************************************** 
  * mqtt_generic
  * Andrew Sands - r0kdu5t@theatrix.org.nz
  *
  * Forked from mqtt_temperature by Jon Archer
  *
- * This is a starting point sketch.
- * It can be configured to use either a DS18B20 to generate
- * a MAC address for ethernet use from the Dallas sensors unique ID
- * or can retrieve the MAC address from a Microchip 24AA125E48 I2C ROM. 
+ * The arduino can be configured to use either;
+ * a DS18B20 to generate a MAC address for ethernet use from the Dallas sensors unique ID
+ * or can retrieve the MAC address from a Microchip 24AA125E48 I2C ROM.
+ *
+ * As configured this code will create a mqtt node that will emit a beacon.
  * 
- ****************************************************/
+ ***************************************************************************/
 //#define MAC_DS  	// Use DS for MAC
 //#define DS_TEMP       // Use DS for temperature
 #include <SPI.h>
@@ -208,8 +209,8 @@ void getHumid() {
   // check if returns are valid, if they are NaN (not a number) then something went wrong!
   if (isnan(t) || isnan(h)) {
     #ifdef DEBUG_PRINT
-    //Serial.println(temp);
-    Serial.println("Arduino 01: Failed to read from DHT");
+    // TODO: Find where "Read fail" comes from.
+    Serial.println("Failed to read from DHT");
     #endif // DEBUG_PRINT
     snprintf(topic, 40, "raw/%s/status", macstr);
     client.publish(topic, "Failed to read from DHT");
@@ -229,8 +230,9 @@ void getHumid() {
     Serial.print("DHT: ");
     Serial.print("Temperature: ");
     Serial.print(t);
-    Serial.print("Humidity: ");
+    Serial.print(" Humidity: ");
     Serial.print(h);
+    Serial.println();
 #endif // DEBUG_PRINT
   }
 }
@@ -268,7 +270,7 @@ void setup() {
 
 #ifdef HUMID
 #ifdef DEBUG_PRINT
-  Serial.print("DEBUG mode. HUMID Routine: ");
+  Serial.println("DEBUG mode. HUMID Routine: ");
 #endif // DEBUG_PRINT
   dht.begin();
 #endif // HUMID

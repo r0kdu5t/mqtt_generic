@@ -3,15 +3,11 @@
  * Andrew Sands - r0kdu5t@theatrix.org.nz
  *
  * Forked from mqtt_temperature by Jon Archer
- * 
- * Sketch to take the temperature from an attached 
- * Dallas sensor and post it over MQTT. 
- * Can be configured to use the DS18B20 to generate
- * a MAC address for ethernet use from 
- * the Dallas sensors unique ID or can retrieve the
- * MAC address from a Microchip 24AA125E48 I2C ROM.
  *
  * This is a starting point sketch.
+ * It can be configured to use either a DS18B20 to generate
+ * a MAC address for ethernet use from the Dallas sensors unique ID
+ * or can retrieve the MAC address from a Microchip 24AA125E48 I2C ROM. 
  * 
  ****************************************************/
 //#define MAC_DS  	// Use DS for MAC
@@ -31,6 +27,9 @@
 #include <Wire.h>
 #define I2C_ADDRESS 0x50
 #endif
+#ifdef HUMID
+#include "DHT.h"
+#endif // HUMID
 
 byte mac[]= { 
   0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02 };
@@ -42,18 +41,21 @@ OneWire node_id(ONE_WIRE_BUS);
 #ifdef DS_TEMP 
 DallasTemperature nodeaddr(&node_id);
 #endif // DS_TEMP
+#ifdef HUMID
+DHT dht(DHTPIN, DHTTYPE);
+#endif // HUMID
 
 EthernetClient ethClient;  // Ethernet object
 PubSubClient client( MQTT_SERVER, 1883, callbackMQTT, ethClient); // MQTT object
 
-#ifdef BEACON
+//#ifdef BEACON || def HUMID
 long previousMillis = 0;
 #ifdef DEBUG_PRINT
 #define INTERVAL 10000
 #else#
 #define INTERVAL 60000
 #endif
-#endif // BEACON
+//#endif // BEACON
 
 #ifdef BEACON
 /**
@@ -74,7 +76,7 @@ void activateBeacon() {
     
 #ifdef DEBUG_PRINT
     Serial.print(topic);
-    Serial.print(" ");
+    Serial.print(" : ");
     Serial.println(BEACON_TEXT);
 #endif // DEBUG_PRINT
   } 
@@ -164,7 +166,7 @@ void getTemp()
   float celsius = nodeaddr.getTempCByIndex(0);
   // Index 0 means first device on the 1-Wire bus.
 
-  // push each stright out via mqtt
+  // push out via mqtt every INTERVAL
   if ( (millis() - tempTimeout) > 10000 ) {
     // if (millis() > (time + 150000)) {
     tempTimeout = millis();
@@ -185,7 +187,55 @@ void getTemp()
 } // end getTemp()
 #endif // DS_TEMP 
 
+#ifdef HUMID
+/**
+ * getHumid
+ */
+void getHumid() {
+  char topic[50];
+  memset(topic, '\0', 50);
+  unsigned long currentMillis = millis();
+  
+  if (currentMillis - previousMillis > long(INTERVAL)) {
+    // save the last time
+    previousMillis = currentMillis;
+    
+  // Reading temperature or humidity takes about 250 milliseconds!
+  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
 
+  // check if returns are valid, if they are NaN (not a number) then something went wrong!
+  if (isnan(t) || isnan(h)) {
+    #ifdef DEBUG_PRINT
+    //Serial.println(temp);
+    Serial.println("Arduino 01: Failed to read from DHT");
+    #endif // DEBUG_PRINT
+    snprintf(topic, 40, "raw/%s/status", macstr);
+    client.publish(topic, "Failed to read from DHT");
+  } else {
+    char charMsg[10];
+    memset(charMsg, '\0', 10);
+    dtostrf(t, 4, 2, charMsg);
+    snprintf(topic, 50, "raw/%s/temperature", macstr);
+    client.publish(topic, charMsg);  // publish Temperature.
+   
+    memset(charMsg, '\0', 10);
+    dtostrf(h, 4, 2, charMsg);
+    snprintf(topic, 50, "raw/%s/humidity", macstr);
+    client.publish(topic, charMsg);  // publish Humidity in %
+    }    
+#ifdef DEBUG_PRINT
+    Serial.print("DHT: ");
+    Serial.print("Temperature: ");
+    Serial.print(t);
+    Serial.print("Humidity: ");
+    Serial.print(h);
+#endif // DEBUG_PRINT
+  }
+}
+
+#endif // HUMID
 
 void setup() {
   Serial.begin(9600);
@@ -206,15 +256,23 @@ void setup() {
   ethernetFromMCP();
 #endif
 
+#ifdef DEBUG_PRINT
+  Serial.print("DEBUG mode. Beacon INTERVAL set to : ");
+  Serial.println(INTERVAL);
+#endif // DEBUG_PRINT
+
 #ifdef DS_TEMP
   //Start the dallas sensor
   nodeaddr.begin();
 #endif // DS_TEMP
 
+#ifdef HUMID
 #ifdef DEBUG_PRINT
-  Serial.print("DEBUG mode. Beacon INTERVAL set to : ");
-  Serial.println(INTERVAL);
-#endif // DEBUG_PRINT  
+  Serial.print("DEBUG mode. HUMID Routine: ");
+#endif // DEBUG_PRINT
+  dht.begin();
+#endif // HUMID
+
   // short delay to make sure we're happy
   delay(100);
 } // end setup()
@@ -231,6 +289,10 @@ void loop()
   getTemp();
 #endif // DS_TEMP
 
+#ifdef HUMID
+  //Get humidity
+  getHumid();
+#endif // HUMID
   // are we still connected to MQTT
    if (!client.connected() && !connect_mqtt()) {
        return;

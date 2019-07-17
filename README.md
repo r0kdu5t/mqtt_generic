@@ -13,7 +13,7 @@ This is essentially a base sketch for all Arduino based home automation boards f
 
 3) the data is then farmed off to a data logger or end point using MQTT.
 
-You must copy the config.h.sample file to config.h and edit your own variables for this to work.
+You must copy the CONFIG.h.sample file to CONFIG.h and edit your own variables for this to work.
 
 MQTT_SERVER - set this to the hostname or IP of your MQTT Broker
 

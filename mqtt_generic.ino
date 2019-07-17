@@ -17,11 +17,14 @@
 #include <PubSubClient.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include "config.h"
+#include "CONFIG.h"
 
 byte mac[]= { 0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02 };
 OneWire ds(2);
 
+//Start MQTT goodness
+void callbackMQTT(char* topic, byte* payload, unsigned int length) {
+}
 
 EthernetClient ethClient;  // Ethernet object
 PubSubClient client( MQTT_SERVER, 1883, callbackMQTT, ethClient); // MQTT object
@@ -78,9 +81,6 @@ void ethernetFromDS(){
 #endif  
 }
 
-//Start MQTT goodness
-void callbackMQTT(char* topic, byte* payload, unsigned int length) {
-}
 
 void checkMQTT() {
     if(!client.connected()) {

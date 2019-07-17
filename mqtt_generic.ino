@@ -19,7 +19,11 @@
 #include <DallasTemperature.h>
 #include "CONFIG.h"
 
+
 byte server[] = MQTT_SERVER;
+const char topic[] = TEMP_TOPIC;
+const char client_id[] = CLIENT_ID;
+
 byte mac[]= { 0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02 };
 OneWire ds(2);
 
@@ -85,7 +89,7 @@ void ethernetFromDS(){
 
 void checkMQTT() {
     if(!client.connected()) {
-    if (client.connect(CLIENT_ID)) {
+    if (client.connect(client_id)) {
 #ifdef DEBUG_PRINT
       Serial.println(F("MQTT Reconecting"));
 #endif
@@ -108,7 +112,7 @@ void getTemp()
        if ( (millis() - tempTimeout) > 10000 ) {
        // if (millis() > (time + 150000)) {
     tempTimeout = millis();
-    client.publish(TEMP_TOPIC, temp);
+    client.publish(topic, temp);
     delay( 1000 );
     
 #ifdef DEBUG_PRINT

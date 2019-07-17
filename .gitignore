@@ -2,6 +2,6 @@
 *.bak
 *.mp3
 TODO
-CONFIG*
+CONFIG.h
 secret*
 config.h

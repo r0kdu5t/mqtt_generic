@@ -19,6 +19,7 @@
 #include <DallasTemperature.h>
 #include "CONFIG.h"
 
+byte server[] = MQTT_SERVER;
 byte mac[]= { 0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02 };
 OneWire ds(2);
 
@@ -27,7 +28,7 @@ void callbackMQTT(char* topic, byte* payload, unsigned int length) {
 }
 
 EthernetClient ethClient;  // Ethernet object
-PubSubClient client( MQTT_SERVER, 1883, callbackMQTT, ethClient); // MQTT object
+PubSubClient client( server, 1883, callbackMQTT, ethClient); // MQTT object
 DallasTemperature dallas(&ds);
 
 void ethernetFromDS(){

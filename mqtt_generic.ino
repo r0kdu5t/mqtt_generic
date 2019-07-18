@@ -1,7 +1,7 @@
 /****************************************************
-   mqtt_temp
+   mqtt_generic
 
-   Jon Archer
+   Based heavily upon Arduino_mqtt_temp by Jon Archer
 
    Sketch to take the temperature from an attached
    Dallas sensor and post it over MQTT, this also
@@ -20,10 +20,12 @@
 #include "CONFIG.h"
 
 
-byte server[] = MQTT_SERVER;
+byte broker[] = MQTT_BROKER;
 const char topic[] = TEMP_TOPIC;
 const char client_id[] = CLIENT_ID;
-byte mac[] = MAC;
+static uint8_t mac[] = MAC;
+const char* commandTopic = "cmnd/";               // MQTT topic to subscribe for commands
+const char* statusTopic  = "stat/";               // MQTT topic to publish status reports
 
 OneWire ds(2);
 
@@ -32,7 +34,7 @@ void callbackMQTT(char* topic, byte* payload, unsigned int length) {
 }
 
 EthernetClient ethClient;  // Ethernet object
-PubSubClient client( server, 1883, callbackMQTT, ethClient); // MQTT object
+PubSubClient client( broker, 1883, callbackMQTT, ethClient); // MQTT object
 DallasTemperature dallas(&ds);
 
 void ethernetFromDS() {
@@ -86,16 +88,39 @@ void ethernetFromDS() {
 #endif
 }
 
-
-void checkMQTT() {
-  if (!client.connected()) {
-    if (client.connect(client_id)) {
-#ifdef DEBUG_PRINT
-      Serial.println(F("MQTT Reconecting"));
-#endif
+/**
+ * Attempt connection to the MQTT broker, and try repeatedly until it succeeds
+ */
+void reconnect() {
+  // Generate a unique MQTT client ID from our IP address
+  char clientBuffer[50];
+  String clientString = client_id + String(Ethernet.localIP());
+  clientString.toCharArray(clientBuffer, clientString.length() + 1);
+  
+  while (!client.connected()) {
+    //Serial.print("Attempting MQTT connection...");
+    if (client.connect(clientBuffer)) {
+      //Serial.println("connected");
+      client.publish(statusTopic,"Window controller connected");  // Announce ourselves
+      client.subscribe(commandTopic);  // Listen for incoming commands
+    } else {
+      //Serial.print("failed, rc=");
+      //Serial.print(client.state());
+      //Serial.println(" try again in 5 seconds");
+      delay(5000);  // Wait 5 seconds before retrying
     }
   }
-} // end checkMQTT()
+}
+
+//void checkMQTT() {
+//  if (!client.connected()) {
+//    if (client.connect(client_id)) {
+//#ifdef DEBUG_PRINT
+//      Serial.println(F("MQTT Reconecting"));
+//#endif
+//    }
+//  }
+//} // end checkMQTT()
 
 
 void getTemp()
@@ -134,20 +159,25 @@ void setup()
   //Start the dallas sensor
   dallas.begin();
 
-  // Start MQTT
-  checkMQTT();
+//  // Start MQTT
+//  checkMQTT();
 
   // short delay to make sure we're happy
   delay(100);
 }
 
 
-void loop()
-{
-  client.loop();
+void loop() {
+  // Make sure we're connected to the MQTT broker
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();  
+
+  
   //Get the temperatures
   getTemp();
 
-  // are we still connected to MQTT
-  checkMQTT();
+//  // are we still connected to MQTT
+//  checkMQTT();
 }

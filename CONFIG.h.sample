@@ -1,6 +1,7 @@
 
 //#define DEBUG_PRINT
 
-#define MQTT_SERVER "192.168.1.1"
+#define MQTT_SERVER { 192, 168, 1, 1 }
 #define TEMP_TOPIC "house/room1/temp"
 #define  CLIENT_ID "room1"
+#define MAC { 0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02 }

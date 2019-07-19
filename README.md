@@ -1,5 +1,4 @@
 # **mqtt_generic**
-========================
 
 _Forked from Arduino_mqtt_temperature by J Archer._
 
@@ -15,8 +14,14 @@ This is essentially a base sketch for all Arduino based home automation boards f
 
 You must copy the CONFIG.h.sample file to CONFIG.h and edit your own variables for this to work.
 
-MQTT_SERVER - set this to the hostname or IP of your MQTT Broker
+* MQTT_BROKER - set this to the hostname or IP of your MQTT Broker
+* TEMP_TOPIC set the topic you wish the temperature to be published to here
+* CLIENT_ID - This can be anything but should be unique to this sketch - this will probably be changed in future
+* MAC - Possible fall back mac address.
 
-TEMP_TOPIC set the topic you wish the temperature to be published to here
+4) ####Libraries in use.
+* Blah
+* Blah2
+* PubSubClient
+    - Check on the value of MQTT_MAX_PACKET_SIZE in PubSubClient.h
 
-CLIENT_ID - This can be anything but should be unique to this sketch - this will probably be changed in future

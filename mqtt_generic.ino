@@ -28,6 +28,7 @@ const char* commandTopic = "cmnd/";               // MQTT topic to subscribe for
 const char* statusTopic  = "stat/";               // MQTT topic to publish status reports
 
 OneWire ds(2);
+DallasTemperature dallas(&ds);
 
 //Start MQTT goodness
 void callbackMQTT(char* topic, byte* payload, unsigned int length) {
@@ -35,7 +36,7 @@ void callbackMQTT(char* topic, byte* payload, unsigned int length) {
 
 EthernetClient ethClient;  // Ethernet object
 PubSubClient client( broker, 1883, callbackMQTT, ethClient); // MQTT object
-DallasTemperature dallas(&ds);
+
 
 void ethernetFromDS() {
   byte i;

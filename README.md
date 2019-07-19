@@ -19,9 +19,9 @@ You must copy the CONFIG.h.sample file to CONFIG.h and edit your own variables f
 * CLIENT_ID - This can be anything but should be unique to this sketch - this will probably be changed in future
 * MAC - Possible fall back mac address.
 
-4) ####Libraries in use.
+4) #### Libraries in use.
 * Blah
 * Blah2
 * PubSubClient
-    - Check on the value of MQTT_MAX_PACKET_SIZE in PubSubClient.h
+    - *Check on the value of **MQTT_MAX_PACKET_SIZE** in 'PubSubClient.h'*
 

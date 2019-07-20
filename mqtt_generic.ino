@@ -3,23 +3,23 @@
 
    Based heavily upon Arduino_mqtt_temp by Jon Archer
 
-   Sketch to take the temperature from an attached
-   Dallas sensor and post it over MQTT, this also
-   generates a mac address for ethernet use from
-   the Dallas sensors unique ID.
-   This is essentially a starting point for all HA
-   sketches as this will feature in every room.
+   Also influenced by SuperHouse Automation Pty Ltd <info@superhouse.tv>
+
+   This is essentially a starting point for MQTT based devices.
+
  ****************************************************/
 
 
-#include <SPI.h>
-#include <Ethernet.h>
-#include <PubSubClient.h>
-#include <OneWire.h>
-#include <DallasTemperature.h>
-#include "CONFIG.h"
+#include <SPI.h>                    // For networking
+#include <Ethernet.h>               // For networking
+#include <PubSubClient.h>           // For MQTT
+#include <OneWire.h>                // 1-Wire bus
+#include <DallasTemperature.h>      // 1-Wire sensors like DS18B20
+#include "CONFIG.h"                 // configuration file
 
-
+/*--------------------------- Configuration ------------------------------*/
+/* Network config */
+/* MQTT Settings */
 byte broker[] = MQTT_BROKER;
 const char topic[] = TEMP_TOPIC;
 const char client_id[] = CLIENT_ID;
@@ -27,16 +27,30 @@ static uint8_t mac[] = MAC;
 const char* commandTopic = "cmnd/";               // MQTT topic to subscribe for commands
 const char* statusTopic  = "stat/";               // MQTT topic to publish status reports
 
+/* Watchdog Timer Settings */
+/*
+   Always TRUE so this is not needed.
+   #define ENABLE_EXTERNAL_WATCHDOG        true       // true / false
+*/
+#define WATCHDOG_PIN                    6          // Output to pat the watchdog
+#define WATCHDOG_PULSE_LENGTH           50         // Milliseconds
+#define WATCHDOG_RESET_INTERVAL         30000      // Milliseconds. Also the period for sensor reports.
+long watchdogLastResetTime = 0;
+
+/* Temperature Sensor Settings */
 OneWire ds(2);
-DallasTemperature dallas(&ds);
 
 //Start MQTT goodness
 void callbackMQTT(char* topic, byte* payload, unsigned int length) {
 }
 
-EthernetClient ethClient;  // Ethernet object
-PubSubClient client( broker, 1883, callbackMQTT, ethClient); // MQTT object
-
+/*EthernetClient ethClient;  // Ethernet object
+  PubSubClient client( broker, 1883, callbackMQTT, ethClient); // MQTT object
+*/
+/* Ok HAL, build me some objects */
+EthernetClient ethClient;             // Ethernet
+PubSubClient   client(ethClient);     // MQTT
+DallasTemperature dallas(&ds);        // Temperature sensor
 
 void ethernetFromDS() {
   byte i;
@@ -90,19 +104,19 @@ void ethernetFromDS() {
 }
 
 /**
- * Attempt connection to the MQTT broker, and try repeatedly until it succeeds
- */
+   Attempt connection to the MQTT broker, and try repeatedly until it succeeds
+*/
 void reconnect() {
   // Generate a unique MQTT client ID from our IP address
   char clientBuffer[50];
   String clientString = client_id + String(Ethernet.localIP());
   clientString.toCharArray(clientBuffer, clientString.length() + 1);
-  
+
   while (!client.connected()) {
     //Serial.print("Attempting MQTT connection...");
     if (client.connect(clientBuffer)) {
       //Serial.println("connected");
-      client.publish(statusTopic,"Window controller connected");  // Announce ourselves
+      client.publish(statusTopic, "Window controller connected"); // Announce ourselves
       client.subscribe(commandTopic);  // Listen for incoming commands
     } else {
       //Serial.print("failed, rc=");
@@ -123,45 +137,22 @@ void reconnect() {
 //  }
 //} // end checkMQTT()
 
-
-void getTemp()
-{
-
-  dallas.requestTemperatures(); // Send the command to get temperatures
-
-  char* temp;
-  unsigned long tempTimeout = 0;
-  char message_buffer[100];
-  temp = dtostrf(dallas.getTempCByIndex(0), 5, 2, message_buffer);
-
-  // push each stright out via mqtt
-  if ( (millis() - tempTimeout) > 10000 ) {
-    // if (millis() > (time + 150000)) {
-    tempTimeout = millis();
-    client.publish(topic, temp);
-    delay( 1000 );
-
-#ifdef DEBUG_PRINT
-    Serial.println(temp);
-
-#endif
-  }
-
-} // end getTemp()
-
-
-
 void setup()
 {
   Serial.begin(9600);
+
+  pinMode(WATCHDOG_PIN, OUTPUT);
+  digitalWrite(WATCHDOG_PIN, LOW);
+  
   //Start Ethernet using mac formed from DS
   ethernetFromDS();
 
   //Start the dallas sensor
   dallas.begin();
 
-//  // Start MQTT
-//  checkMQTT();
+  // Set up MQTT
+  client.setServer(broker, 1883);
+  client.setCallback(callbackMQTT);
 
   // short delay to make sure we're happy
   delay(100);
@@ -173,12 +164,12 @@ void loop() {
   if (!client.connected()) {
     reconnect();
   }
-  client.loop();  
+  client.loop();
 
-  
+  runHeartbeat();
   //Get the temperatures
-  getTemp();
+  //getTemp();
 
-//  // are we still connected to MQTT
-//  checkMQTT();
+  //  // are we still connected to MQTT
+  //  checkMQTT();
 }

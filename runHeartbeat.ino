@@ -14,9 +14,13 @@ void runHeartbeat()
     //    char relH[10];
     //    dtostrf(humidity,1,2,relH);
     char* temp;
-    
+
     char message_buffer[100];
     temp = dtostrf(dallas.getTempCByIndex(0), 5, 2, message_buffer);
+
+#ifdef DEBUG_PRINT
+    Serial.println(temp);
+#endif
 
     //client.publish(temperatureTopic, tempC);
     if (client.publish(topic, temp))

@@ -110,18 +110,27 @@ void reconnect() {
   // Generate a unique MQTT client ID from our IP address
   char clientBuffer[50];
   String clientString = client_id + String(Ethernet.localIP());
+#ifdef DEBUG_PRINT
+    Serial.println(clientString);
+#endif  
   clientString.toCharArray(clientBuffer, clientString.length() + 1);
 
   while (!client.connected()) {
-    //Serial.print("Attempting MQTT connection...");
+#ifdef DEBUG_PRINT
+    Serial.print("Attempting MQTT connection...");
+#endif
     if (client.connect(clientBuffer)) {
-      //Serial.println("connected");
+#ifdef DEBUG_PRINT
+      Serial.println("connected");
+#endif
       client.publish(statusTopic, "Window controller connected"); // Announce ourselves
       client.subscribe(commandTopic);  // Listen for incoming commands
     } else {
+#ifdef DEBUG_PRINT
       //Serial.print("failed, rc=");
       //Serial.print(client.state());
       //Serial.println(" try again in 5 seconds");
+#endif
       delay(5000);  // Wait 5 seconds before retrying
     }
   }
@@ -143,7 +152,7 @@ void setup()
 
   pinMode(WATCHDOG_PIN, OUTPUT);
   digitalWrite(WATCHDOG_PIN, LOW);
-  
+
   //Start Ethernet using mac formed from DS
   ethernetFromDS();
 
@@ -162,6 +171,9 @@ void setup()
 void loop() {
   // Make sure we're connected to the MQTT broker
   if (!client.connected()) {
+#ifdef DEBUG_PRINT
+    Serial.println(F("MQTT Reconecting"));
+#endif
     reconnect();
   }
   client.loop();

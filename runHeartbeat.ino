@@ -23,10 +23,13 @@ void runHeartbeat()
 #endif
 
     //client.publish(temperatureTopic, tempC);
-    if (client.publish(topic, temp))
-    {
+//    if (client.publish(topic, temp))
+//    {
       patWatchdog();  // Only pat the watchdog if we successfully published to MQTT
-    }
+#ifdef DEBUG_PRINT
+    Serial.println("Pat the Dog!");
+#endif      
+//    }
     // The interval timer is updated inside patWatchdog()
   }
 }

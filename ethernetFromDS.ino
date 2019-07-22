@@ -48,7 +48,7 @@ void ethernetFromDS() {
   //  for (byte thisByte = 0; thisByte < 4; thisByte++) {
   //    // print the value of each byte of the IP address:
   //    Serial.println(Ethernet.localIP()[thisByte], DEC);
+  //}
   Serial.println( Ethernet.localIP() );
-}
 #endif
 }

@@ -21,11 +21,15 @@
 /* Network config */
 /* MQTT Settings */
 byte broker[] = MQTT_BROKER;
-const char topic[] = TEMP_TOPIC;
-const char client_id[] = CLIENT_ID;
+//const char topic[] = TEMP_TOPIC;
+const char topic_base[] = TOPIC_BASE;
+//const char client_id[] = CLIENT_ID;
 static uint8_t mac[] = MAC;
-const char* commandTopic = "cmnd/";               // MQTT topic to subscribe for commands
+// May remove the following soon!
+const char* commandTopic = "cmnd/";               // MQTT topic to subscribe for commands - REMOVE from reconnect!!
 const char* statusTopic  = "stat/";               // MQTT topic to publish status reports
+const byte iWire = ONE_WIRE_BUS;
+char client_id[8];
 
 /* Watchdog Timer Settings */
 /*
@@ -38,7 +42,7 @@ const char* statusTopic  = "stat/";               // MQTT topic to publish statu
 long watchdogLastResetTime = 0;
 
 /* Temperature Sensor Settings */
-OneWire ds(2);
+OneWire ds(iWire);
 
 //Start MQTT goodness
 void callbackMQTT(char* topic, byte* payload, unsigned int length) {
@@ -65,6 +69,13 @@ void setup()
   //Start the dallas sensor
   dallas.begin();
 
+  // Testing substring extraction.
+  //char client_id[8];
+  strncpy(client_id, &topic_base[5], 7);
+  client_id[7] = '\0';
+  Serial.println(topic_base);
+  Serial.println(client_id);
+  
   // Set up MQTT
   client.setServer(broker, 1883);
   client.setCallback(callbackMQTT);

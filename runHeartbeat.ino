@@ -15,7 +15,7 @@ void runHeartbeat()
     Serial.println((float)tempValue,2);
 #endif
 
-    PublishFloat((char *)"Temperature", tempValue); // Publish temperature value on topic
+    PublishFloat((char *)"DS18B20", tempValue); // Publish temperature value on topic
 ////    if (client.publish(topic, temp))
 ////    {
 //      patWatchdog();  // Only pat the watchdog if we successfully published to MQTT

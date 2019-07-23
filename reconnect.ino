@@ -23,14 +23,17 @@ void reconnect() {
 #endif
       // Once connected, publish an announcement...
       Publish((char *)"LWT", (char *)"OnLine");
-      // ... and resubscribe      
-      client.publish(statusTopic, "Window controller connected"); // Announce ourselves
-      client.subscribe(commandTopic);  // Listen for incoming commands
+      // ... and resubscribe
+#ifdef DEBUG_PRINT
+      Serial.println("Subscribe..");
+#endif        
+      //client.publish(statusTopic, "Window controller connected"); // Announce ourselves
+      //client.subscribe(commandTopic);  // Listen for incoming commands
     } else {
 #ifdef DEBUG_PRINT
-      //Serial.print("failed, rc=");
-      //Serial.print(client.state());
-      //Serial.println(" try again in 5 seconds");
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
 #endif
       delay(5000);  // Wait 5 seconds before retrying
     }

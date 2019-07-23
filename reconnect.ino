@@ -22,7 +22,7 @@ void reconnect() {
       Serial.println("connected");
 #endif
       // Once connected, publish an announcement...
-      Publish((char *)TOPIC_BASE "LWT", (char *)"OnLine");
+      Publish((char *)"LWT", (char *)"OnLine");
       // ... and resubscribe      
       client.publish(statusTopic, "Window controller connected"); // Announce ourselves
       client.subscribe(commandTopic);  // Listen for incoming commands

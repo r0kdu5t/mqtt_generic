@@ -1,7 +1,7 @@
 
 //#define DEBUG_PRINT
 
-#define MQTT_BROKER { 192, 168, 1, 1 }
-#define TEMP_TOPIC "house/room1/temp"
-#define CLIENT_ID "room1"
-#define MAC { 0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02 }
+#define MQTT_BROKER { 192, 168, 1, 1 }              // MQTT Broker IP on network
+#define TOPIC_BASE "house/room1/"                   // Format of '%PREFIX% / %NAME% /' Remember to change %NAME% for each different device!
+#define MAC { 0x00, 0xAA, 0xBB, 0xCC, 0xDE, 0x02 }  // MAC unique for device!
+#define ONE_WIRE_BUS 2                              // 1-Wire sensor connects to this pin!

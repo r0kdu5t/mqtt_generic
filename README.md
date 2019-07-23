@@ -15,9 +15,9 @@ This is essentially a base sketch for all Arduino based home automation boards f
 You must copy the CONFIG.h.sample file to CONFIG.h and edit your own variables for this to work.
 
 * MQTT_BROKER - set this to the hostname or IP of your MQTT Broker
-* TEMP_TOPIC set the topic you wish the temperature to be published to here
-* CLIENT_ID - This can be anything but should be unique to this sketch - this will probably be changed in future
+* TOPIC_BASE - set the the base topic you want to be published on here
 * MAC - Possible fall back mac address.
+* ONE_WIRE_BUS 2 - the pin a 1-Wire sensor connects to. If used.
 
 4) #### Libraries in use.
 * Blah

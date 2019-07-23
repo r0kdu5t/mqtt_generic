@@ -6,52 +6,18 @@ void runHeartbeat()
   if ((millis() - watchdogLastResetTime) > WATCHDOG_RESET_INTERVAL) // Is it time to run yet?
   {
     dallas.requestTemperatures(); // Send the command to get temperatures
-    //humidity = dht.readHumidity();
-    //temperature = dht.readTemperature();
 
-    //    char tempC[10];
-    //    dtostrf(temperature,1,2,tempC);
-    //    char relH[10];
-    //    dtostrf(humidity,1,2,relH);
-    char* temp;
 
-    char message_buffer[100];
-    temp = dtostrf(dallas.getTempCByIndex(0), 5, 2, message_buffer);
+    float tempValue = dallas.getTempCByIndex(0); // Get value from sensor
+
 
 #ifdef DEBUG_PRINT
-    Serial.println(temp);
+    Serial.println((float)(2.789),1); // This will print: “2.8”
+    Serial.println((float)tempValue,2);
 #endif
 
-    //client.publish(temperatureTopic, tempC);
-    if (client.publish(topic, temp))
-    {
-      patWatchdog();  // Only pat the watchdog if we successfully published to MQTT
-    }
+    PublishFloat((char *)"DS18B20", tempValue); // Publish temperature value on topic
+
     // The interval timer is updated inside patWatchdog()
   }
 }
-
-//void getTemp()
-//{
-//
-//  dallas.requestTemperatures(); // Send the command to get temperatures
-//
-//  char* temp;
-//  unsigned long tempTimeout = 0;
-//  char message_buffer[100];
-//  temp = dtostrf(dallas.getTempCByIndex(0), 5, 2, message_buffer);
-//
-//  // push each stright out via mqtt
-//  if ( (millis() - tempTimeout) > 10000 ) {
-//    // if (millis() > (time + 150000)) {
-//    tempTimeout = millis();
-//    client.publish(topic, temp);
-//    delay( 1000 );
-//
-//#ifdef DEBUG_PRINT
-//    Serial.println(temp);
-//
-//#endif
-//  }
-//
-//} // end getTemp()

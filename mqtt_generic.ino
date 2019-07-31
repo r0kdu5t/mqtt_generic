@@ -23,7 +23,8 @@
 byte broker[] = MQTT_BROKER;
 //const char topic[] = TEMP_TOPIC;
 //const char topic_base[] = TOPIC_BASE;
-#define TOPIC_BASE "tele/HitGirl/"                   // Format of '%PREFIX% / %NAME% /' Remember to change %NAME% for each different device!
+//#define TOPIC_BASE "tele/HitGirl/"                   // Format of '%PREFIX% / %NAME% /' Remember to change %NAME% for each different device!
+#define TOPIC_BASE "tele/KickAss/"                   // Format of '%PREFIX% / %NAME% /' Remember to change %NAME% for each different device!
 //const char client_id[] = CLIENT_ID;
 static uint8_t mac[] = MAC;
 // May remove the following soon!
